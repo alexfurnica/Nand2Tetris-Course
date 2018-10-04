@@ -25,9 +25,43 @@ def isAinstruction(line):
 # Parser class to identify type of command and split it accordingly
 class Parser:
     
-    def __init__(self, line):
-        self.line = line
+    def __init__(self):
+        self.symbol_table = {
+            "R0" : "0",
+            "R1" : "1",
+            "R2" : "2",
+            "R3" : "3",
+            "R4" : "4",
+            "R5" : "5",
+            "R6" : "6",
+            "R7" : "7",
+            "R8" : "8",
+            "R9" : "9",
+            "R10" : "10",
+            "R11" : "11",
+            "R12" : "12",
+            "R13" : "13",
+            "R14" : "14",
+            "R15" : "15",
+            "SCREEN" : "16384",
+            "KBD" : "24576",
+            "SP" : "0",
+            "LCL" : "1",
+            "ARG" : "2",
+            "THIS" : "3",
+            "THAT" : "4"
+        }
+
+        self.cmd_type = ""
+        self.command = ""
+        self.destination = ""
+        self.computation = ""
+        self.jump = ""
     
+    def read_line(self, line):
+        self.line = line
+
+    # Prepares attributes for cmd_mapper
     def prepare(self):
         if isAinstruction(self.line):
             self.cmd_type = "A" # not sure if needed
@@ -36,6 +70,7 @@ class Parser:
             self.cmd_type = "C" # not sure if needed
             self.destination, self.computation, self.jump = self.parse_c_command(self.line)
     
+    # Parses C command and returns its parts separately
     def parse_c_command(self, line):
         if "=" in line:
             destination = re.compile(r".*(?==)").match(line).group()
@@ -46,13 +81,21 @@ class Parser:
             else:
                 jump = ""
             
-              
         else:
             destination = ""
             computation = re.compile(r".*(?=;)").search(line).group()
             jump = re.compile(r"(?<=;)\w{3}").search(line).group()
 
         return destination, computation, jump
+
+    # Function to reset field after line has been processed    
+    def reset(self):
+        self.cmd_type = ""
+        self.command = ""
+        self.destination = ""
+        self.computation = ""
+        self.jump = ""
+
 
 # After Parser splits the command, Cmd_mapper converts each one into
 # binary based on the mapping table
