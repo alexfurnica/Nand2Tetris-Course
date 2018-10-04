@@ -92,6 +92,12 @@ class Parser:
 
         return destination, computation, jump
 
+    def parse_label(self, line, line_number):
+        label = re.compile(r'(?<=\()\w*(?=\))').search(line).group()
+        
+        if label not in self.symbol_table.keys():
+            self.symbol_table[label] = line_number
+
     # Function to reset field after line has been processed    
     def reset(self):
         self.cmd_type = ""
@@ -178,8 +184,28 @@ final_file = ""
 file_name = sys.argv[1]
 
 # prep cmd_mapper
-
 mapper = Cmd_mapper()
+
+# read in file so it only gets read once
+instructions = open(file_name, "r").readlines()
+
+# initialize parser
+parser = Parser()
+
+# First sweep through the file for label detection
+
+for line in instructions.splitlines():
+    line = removeWhitespace(line)
+    parser.read_line(line)
+
+    if parser.cmd_type != "Label":
+        parser.reset()
+        continue
+    
+    parser.parse_label(line)
+    parser.reset()
+
+# Second sweep through the file for variable detection
 
 with open(file_name, "r") as f:
     for line in f.readlines():
@@ -188,7 +214,6 @@ with open(file_name, "r") as f:
         if line == "":
             continue
 
-        parser = Parser(line)
         parser.prepare()
 
         if parser.cmd_type == "A":
