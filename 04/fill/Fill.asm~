@@ -1,0 +1,102 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/04/Fill.asm
+
+// Runs an infinite loop that listens to the keyboard input.
+// When a key is pressed (any key), the program blackens the screen,
+// i.e. writes "black" in every pixel;
+// the screen should remain fully black as long as the key is pressed. 
+// When no key is pressed, the program clears the screen, i.e. writes
+// "white" in every pixel;
+// the screen should remain fully clear as long as no key is pressed.
+
+// Put your code here.
+
+// setting screen address pointer
+@SCREEN
+D=M
+@addr
+M=D
+
+// setting lenght of screen memory map
+@8192
+D=A
+@n
+M=D
+
+// setting iterators to 0
+@i
+M=0
+@j
+M=0
+
+// main loop
+(LOOP)
+    // if no key pressed clear screen
+    @KBD
+    D=M
+    @CLEAR
+    D;JEQ
+    
+    // else fill the screen
+    @FILL
+    0;JMP
+
+
+    (CLEAR)
+       // set fill iterator to 0 to prepare for key press
+       @j
+       M=0
+
+       // break loop when i > n
+       @n
+       D=M
+       @i
+       D=D-M
+       @LOOP
+       D;JLT 
+
+       // set pixels to 0
+       @addr
+       D=M
+       @i
+       A=D+M
+       M=0
+
+       // i++
+       @i
+       M=M+1
+       
+       // repeat loop
+       @CLEAR
+       0;JMP
+
+    (FILL)
+       // reset i for when key is let go
+       @i
+       M=0
+       
+       // break loop when j > n
+       @n
+       D=M
+       @j
+       D=D-M
+       @LOOP
+       D;JLT
+
+       // set pixels to -1
+       @addr
+       D=M
+       @j
+       A=D+M
+       M=-1
+
+       // j++
+       @j
+       M=M+1
+
+       @FILL
+       0;JMP
+
+
