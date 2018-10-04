@@ -19,8 +19,13 @@ def removeWhitespace(line):
     return new_line
 
 # Function checks type of instruction
-def isAinstruction(line):
-    return line[0] == "@"
+def instruction_type(line):
+    if line[0] == "@":
+        return "A"
+    elif line[0] == "(":
+        return "Label"
+    else:
+        return "C"
 
 # Parser class to identify type of command and split it accordingly
 class Parser:
@@ -60,14 +65,13 @@ class Parser:
     
     def read_line(self, line):
         self.line = line
+        self.cmd_type = instruction_type(line)
 
     # Prepares attributes for cmd_mapper
     def prepare(self):
-        if isAinstruction(self.line):
-            self.cmd_type = "A" # not sure if needed
+        if self.cmd_type == "A":
             self.command = self.line[1:]
-        else:
-            self.cmd_type = "C" # not sure if needed
+        elif self.cmd_type == "C":
             self.destination, self.computation, self.jump = self.parse_c_command(self.line)
     
     # Parses C command and returns its parts separately
