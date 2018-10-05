@@ -27,6 +27,14 @@ def instruction_type(line):
     else:
         return "C"
 
+# Function to check if a instruction is number or variable
+def is_number(line):
+    try:
+        int(line)
+        return True
+    except ValueError:
+        return False
+
 # Parser class to identify type of command and split it accordingly
 class Parser:
     
@@ -57,6 +65,7 @@ class Parser:
             "THAT" : "4"
         }
 
+        self.memory_counter = 16
         self.cmd_type = ""
         self.command = ""
         self.destination = ""
@@ -70,7 +79,11 @@ class Parser:
     # Prepares attributes for cmd_mapper
     def prepare(self):
         if self.cmd_type == "A":
-            self.command = self.line[1:]
+            if is_number(self.line):
+                self.command = self.line[1:]
+            else:
+                variable = self.line[1:]
+                self.command = self.symbol_table[variable]
         elif self.cmd_type == "C":
             self.destination, self.computation, self.jump = self.parse_c_command(self.line)
     
@@ -97,6 +110,13 @@ class Parser:
         
         if label not in self.symbol_table.keys():
             self.symbol_table[label] = line_number
+
+    def parse_variable(self, line):
+        variable = line[1:]
+
+        if variable not in self.symbol_table.keys():
+            self.symbol_table[variable] = self.memory_counter
+            self.memory_counter += 1
 
     # Function to reset field after line has been processed    
     def reset(self):
@@ -187,39 +207,62 @@ file_name = sys.argv[1]
 mapper = Cmd_mapper()
 
 # read in file so it only gets read once
-instructions = open(file_name, "r").readlines()
+instructions = open(file_name, "r").read()
 
 # initialize parser
 parser = Parser()
 
-# First sweep through the file for label detection
+# counter for line numbers
+line_counter = 0
 
+# First sweep through the file for label detection
 for line in instructions.splitlines():
     line = removeWhitespace(line)
+
+    if line == "":
+        continue
+
     parser.read_line(line)
 
     if parser.cmd_type != "Label":
+        line_counter += 1
         parser.reset()
         continue
     
-    parser.parse_label(line)
+    parser.parse_label(line, line_counter+1)
     parser.reset()
 
 # Second sweep through the file for variable detection
+for line in instructions.splitlines():
+    line = removeWhitespace(line)
 
-with open(file_name, "r") as f:
-    for line in f.readlines():
+    if line == "":
+        continue
+
+    parser.read_line(line)
+
+    if parser.cmd_type != "A":
+        parser.reset()
+        continue
+    
+    parser.parse_variable(line)
+    parser.reset()
+
+# Final sweep to actually parse file
+
+for line in instructions.splitlines():
         line = removeWhitespace(line)
 
         if line == "":
             continue
 
+        parser.read_line(line)
         parser.prepare()
 
         if parser.cmd_type == "A":
            final_file += (mapper.translate(command = parser.command)) 
            final_file += ("\n")
-        else:
+        elif parser.cmd_type == "C":
             final_file += (mapper.translate(destination = parser.destination,
                              computation = parser.computation,
                              jump = parser.jump))
