@@ -9,8 +9,12 @@ def removeWhitespace(line):
         return ""
     
     for index, char in enumerate(new_line):
-        if char == "/":
+        if char == " ":
             new_line = new_line[:index]
+            break
+        elif char == "/":
+            new_line = new_line[:index]
+            break
         
         # in case line started with a comment
         if len(new_line) == 1:
@@ -79,7 +83,7 @@ class Parser:
     # Prepares attributes for cmd_mapper
     def prepare(self):
         if self.cmd_type == "A":
-            if is_number(self.line):
+            if is_number(self.line[1:]):
                 self.command = self.line[1:]
             else:
                 variable = self.line[1:]
@@ -106,7 +110,7 @@ class Parser:
         return destination, computation, jump
 
     def parse_label(self, line, line_number):
-        label = re.compile(r'(?<=\()\w*(?=\))').search(line).group()
+        label = re.compile(r'(?<=\().*(?=\))').search(line).group()
         
         if label not in self.symbol_table.keys():
             self.symbol_table[label] = line_number
@@ -114,7 +118,7 @@ class Parser:
     def parse_variable(self, line):
         variable = line[1:]
 
-        if variable not in self.symbol_table.keys():
+        if not is_number(variable) and variable not in self.symbol_table.keys():
             self.symbol_table[variable] = self.memory_counter
             self.memory_counter += 1
 
@@ -229,7 +233,7 @@ for line in instructions.splitlines():
         parser.reset()
         continue
     
-    parser.parse_label(line, line_counter+1)
+    parser.parse_label(line, line_counter)
     parser.reset()
 
 # Second sweep through the file for variable detection
